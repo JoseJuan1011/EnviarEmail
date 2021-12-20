@@ -2,10 +2,10 @@ package dad.enviarEmail.controller;
 
 import org.apache.commons.mail.DefaultAuthenticator;
 import org.apache.commons.mail.Email;
-import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.SimpleEmail;
 
 import dad.enviarEmail.model.Model;
+import javafx.concurrent.Task;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.GridPane;
@@ -48,32 +48,43 @@ public class Controller {
 	}
 
 	private void onEnviarAction() {
-		try {
-			Email email = new SimpleEmail();
-			email.setHostName(model.getNombreServidorProperty());
-			email.setSmtpPort(model.getPuertoProperty());
+		Email email = new SimpleEmail();
+		email.setHostName(model.getNombreServidorProperty());
+		email.setSmtpPort(model.getPuertoProperty());
+		email.setAuthenticator(new DefaultAuthenticator(model.getEmailRemitenteProperty(),model.getContraseñaRemitenteProperty()));
+		
+		email.setSSLOnConnect(model.isSSLConexionProperty());
+		
+		
+		
+		Task<String> enviarEmailTask = new Task<String>() {
+
+			@Override
+			protected String call() throws Exception {
+				email.setFrom(model.getEmailRemitenteProperty());
+				
+				email.setSubject(model.getAsuntoProperty());
+				email.setMsg(model.getMensajeProperty());
+				
+				email.addTo(model.getEmailDestinatarioProperty());
+				return email.send();
+			}
 			
-			email.setAuthenticator(new DefaultAuthenticator(model.getEmailRemitenteProperty(),model.getContraseñaRemitenteProperty()));
-			
-			email.setSSLOnConnect(model.isSSLConexionProperty());
-			
-			email.setFrom(model.getEmailRemitenteProperty());
-			
-			email.setSubject(model.getAsuntoProperty());
-			email.setMsg(model.getMensajeProperty());
-			
-			email.addTo(model.getEmailDestinatarioProperty());
-			
-			email.send();
-			
+		};
+		
+		enviarEmailTask.setOnSucceeded(event -> {
 			Alert alert = new Alert(AlertType.INFORMATION);
 			alert.setHeaderText("Mensaje enviado con éxito a "+"\""+model.getEmailDestinatarioProperty()+"\"");
 			alert.showAndWait();
-		} catch (EmailException e) {
+		});
+		enviarEmailTask.setOnFailed(event -> {
+			Throwable e = event.getSource().getException();
 			Alert alert = new Alert(AlertType.ERROR, e.getMessage());
 			alert.setHeaderText("No se pudo enviar el email.");
 			alert.showAndWait();
-		}
+			e.printStackTrace();
+		});
+		new Thread(enviarEmailTask).start();
 	}
 
 	private void onVaciarAction() {

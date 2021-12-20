@@ -9,6 +9,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
@@ -23,7 +24,7 @@ public class View implements Initializable {
     private Button cerrarButton;
 
     @FXML
-    private TextField contraseñaTextField;
+    private PasswordField contraseñaTextField;
 
     @FXML
     private TextField destinatarioTextField;
